@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func SetupOtel(ctx context.Context, name string) (func() error, error) {
+func SetupOtel(ctx context.Context, host, name string) (func() error, error) {
 	res, err := resource.New(ctx,
 		// resource.WithFromEnv(),
 		resource.WithAttributes(
@@ -24,11 +24,11 @@ func SetupOtel(ctx context.Context, name string) (func() error, error) {
 		return nil, errors.Wrap(err, "error creating resource")
 	}
 
-	traceExporterShutdown, err := setupOtelTraces(ctx, res)
+	traceExporterShutdown, err := setupOtelTracerProvider(ctx, res, host)
 	if err != nil {
 		return nil, errors.Wrap(err, "error setting up OTLP traces exporter")
 	}
-	metricExporterShutdown, err := setupOtelMetrics(ctx, res)
+	metricExporterShutdown, err := setupOtelMeterProvider(ctx, res, host)
 	if err != nil {
 		traceExporterShutdown(ctx)
 		return nil, errors.Wrap(err, "error setting up OTLP metrics exporter")

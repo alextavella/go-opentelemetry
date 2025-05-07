@@ -16,7 +16,7 @@ func main() {
 	ctx := context.Background()
 
 	//  OpenTelemetry configuration
-	otelShutdown, err := otel.SetupOtel(ctx, "example-app")
+	otelShutdown, err := otel.SetupOtel(ctx, "otel-collector:4317", "example-app")
 	if err != nil {
 		log.Fatalf("Erro ao configurar OpenTelemetry: %v", err)
 	}

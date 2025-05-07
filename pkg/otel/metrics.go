@@ -3,20 +3,22 @@ package otel
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
-func setupOtelMetrics(
+func setupOtelMeterProvider(
 	ctx context.Context,
 	res *resource.Resource,
+	host string,
 ) (func(ctx context.Context) error, error) {
-	metricOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithInsecure(), otlpmetricgrpc.WithEndpoint("otel-collector:4317")}
+	metricOpts := []otlpmetricgrpc.Option{otlpmetricgrpc.WithInsecure(), otlpmetricgrpc.WithEndpoint(host)}
 	metricExporter, err := otlpmetricgrpc.New(ctx, metricOpts...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "createing new metric exporter failed")
 	}
 	mp := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(res),

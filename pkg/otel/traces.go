@@ -3,6 +3,7 @@ package otel
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -10,14 +11,15 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-func setupOtelTraces(
+func setupOtelTracerProvider(
 	ctx context.Context,
 	res *resource.Resource,
+	host string,
 ) (func(ctx context.Context) error, error) {
-	traceOpts := []otlptracegrpc.Option{otlptracegrpc.WithInsecure(), otlptracegrpc.WithEndpoint("otel-collector:4317")}
+	traceOpts := []otlptracegrpc.Option{otlptracegrpc.WithInsecure(), otlptracegrpc.WithEndpoint(host)}
 	traceExporter, err := otlptracegrpc.New(ctx, traceOpts...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "createing new trace exporter failed")
 	}
 	bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
 	tp := sdktrace.NewTracerProvider(
