@@ -1,4 +1,4 @@
-package infra_otel
+package otel
 
 import (
 	"context"

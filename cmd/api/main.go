@@ -7,14 +7,14 @@ import (
 	"os"
 
 	handler "github.com/alextavella/go-opentelemetry/internal/handler"
-	infraotel "github.com/alextavella/go-opentelemetry/internal/infra/otel"
+	otel "github.com/alextavella/go-opentelemetry/pkg/otel"
 )
 
 func main() {
 	ctx := context.Background()
 
 	//  OpenTelemetry configuration
-	otelShutdown, err := infraotel.SetupOtel(ctx, "example-app")
+	otelShutdown, err := otel.SetupOtel(ctx, "example-app")
 	if err != nil {
 		log.Fatalf("Erro ao configurar OpenTelemetry: %v", err)
 	}

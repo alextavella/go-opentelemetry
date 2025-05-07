@@ -7,17 +7,17 @@ import (
 	"net/http"
 	"time"
 
-	infra_otel "github.com/alextavella/go-opentelemetry/internal/infra/otel"
+	otel "github.com/alextavella/go-opentelemetry/pkg/otel"
 )
 
 func HandleRequest(w http.ResponseWriter, r *http.Request) {
-	meter := infra_otel.GetMeter()
+	meter := otel.GetMeter()
 	requestCounter, err := meter.Int64Counter("request.counter")
 	if err != nil {
 		fmt.Printf("error creating counter: %v\n", err)
 	}
 
-	tracer := infra_otel.GetTracer()
+	tracer := otel.GetTracer()
 	ctx, span := tracer.Start(r.Context(), "handle-request")
 	defer span.End()
 
