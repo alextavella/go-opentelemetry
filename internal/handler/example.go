@@ -4,21 +4,21 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"net/http"
 	"time"
 
 	otel "github.com/alextavella/go-opentelemetry/pkg/otel"
+	"github.com/gofiber/fiber/v3"
 )
 
-func HandleRequest(w http.ResponseWriter, r *http.Request) {
+func HandleRequest(c fiber.Ctx) error {
 	meter := otel.GetMeter()
 	requestCounter, err := meter.Int64Counter("request.counter")
 	if err != nil {
-		fmt.Printf("error creating counter: %v\n", err)
+		return fmt.Errorf("error creating counter: %v\n", err)
 	}
 
 	tracer := otel.GetTracer()
-	ctx, span := tracer.Start(r.Context(), "handle-request")
+	ctx, span := tracer.Start(c.Context(), "handle-request")
 	defer span.End()
 
 	requestCounter.Add(ctx, 1)
@@ -26,5 +26,5 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 
 	time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
 
-	fmt.Fprintln(w, "Hello, OpenTelemetry!")
+	return c.SendString("Hello, OpenTelemetry!")
 }

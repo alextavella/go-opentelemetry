@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
-	handler "github.com/alextavella/go-opentelemetry/internal/handler"
+	"github.com/alextavella/go-opentelemetry/internal/handler"
 	otel "github.com/alextavella/go-opentelemetry/pkg/otel"
+	"github.com/gofiber/fiber/v3"
 )
 
 func main() {
@@ -19,20 +21,27 @@ func main() {
 		log.Fatalf("Erro ao configurar OpenTelemetry: %v", err)
 	}
 
-	// Shutdown gracefully on interrupt signal
-	shuCh := make(chan os.Signal, 1)
+	// HTTP Server
+	app := fiber.New()
+	app.Get("/", handler.HandleRequest)
+
+	// Shutdown
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		<-shuCh
-		log.Println("Recebido sinal de desligamento, encerrando...")
+		<-sigCh
+		log.Println("Received shutdown signal, shutting down...")
 		if err := otelShutdown(); err != nil {
-			log.Fatalf("Erro ao desligar OpenTelemetry: %v", err)
+			log.Fatalf("Error shutting down OpenTelemetry: %v", err)
 		}
-		log.Println("OpenTelemetry desligado com sucesso")
-		os.Exit(0)
+		log.Println("OpenTelemetry shut down successfully")
+		if err := app.Shutdown(); err != nil {
+			log.Fatalf("Error shutting down: %v", err)
+		}
+		log.Println("Server shut down gracefully")
 	}()
 
 	// HTTP Server
-	http.HandleFunc("/", handler.HandleRequest)
-	log.Println("Servidor ouvindo em :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Server listening on :8080")
+	log.Fatal(app.Listen(":8080"))
 }
